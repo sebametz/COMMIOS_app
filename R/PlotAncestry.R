@@ -16,7 +16,7 @@ lable <- function(txt) {
   )
 }
 
-
+# Plot Ternary GGPLOT / PLOTLY
 # reusable function for axis formatting
 axis <- function(txt) {
   list(
