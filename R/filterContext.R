@@ -12,11 +12,12 @@ filterContextInputs <- function(id) {
 filterContextServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     # Return selection if there is data, otherwise return context
-    current_df <- reactive(filterCurrent(context, input$periodFilter, input$countryFilter, input$localityFilter, input$yearsFilter))
+    current_df <- reactive(filterContext(context, input$periodFilter, input$countryFilter, input$localityFilter, input$yearsFilter))
 
     
-    # Observers periodFilter
+    # Observers periodFilter 
     observeEvent(input$periodFilter,{
+      print("updating country because of period")
       param <- list(periodFilter = input$periodFilter, countryFilter = input$countryFilter, 
                      localityFilter = input$localityFilter, yearsFilter = input$yearsFilter)
       
@@ -24,16 +25,22 @@ filterContextServer <- function(id) {
       updateSelectInput(session, "countryFilter", 
                         choices = choices,
                         selected = selection)
+    }, ignoreNULL = FALSE)
+    
+    observeEvent(input$periodFilter,{
+      print("updating locality because of period")
+      param <- list(periodFilter = input$periodFilter, countryFilter = input$countryFilter, 
+                    localityFilter = input$localityFilter, yearsFilter = input$yearsFilter)
       
       c(choices, selection) %<-% getChoices(current_df(), "Locality", param, "localityFilter")
       updateSelectInput(session, "localityFilter",
                         choices = choices,
                         selected = selection)
-    })
+    }, ignoreNULL = FALSE)
     
     # Observers countryFilter
     observeEvent(input$countryFilter,{
-      
+      print("updating locality because of country")
       param <- list(periodFilter = input$periodFilter, countryFilter = input$countryFilter, 
                      localityFilter = input$localityFilter, yearsFilter = input$yearsFilter)
       
@@ -42,11 +49,11 @@ filterContextServer <- function(id) {
       updateSelectInput(session, "localityFilter",
                         choices = choices,
                         selected = selection)
-    })
+    }, ignoreNULL = FALSE)
     
     # Observers localityFilter
     observeEvent(input$localityFilter,{
-      
+      print("updating country because of locality")
       param <- list(periodFilter = input$periodFilter, countryFilter = input$countryFilter, 
                      localityFilter = input$localityFilter, yearsFilter = input$yearsFilter)
       
@@ -55,11 +62,11 @@ filterContextServer <- function(id) {
       updateSelectInput(session, "countryFilter", 
                         choices = choices,
                         selected = selection)
-    })
+    }, ignoreNULL = FALSE)
     
     # Observers yearsFilter
     observeEvent(input$yearsFilter,{
-      
+      print("updating country because of years")
       param <- list(periodFilter = input$periodFilter, countryFilter = input$countryFilter, 
                     localityFilter = input$localityFilter, yearsFilter = input$yearsFilter)
       
@@ -68,6 +75,15 @@ filterContextServer <- function(id) {
       updateSelectInput(session, "countryFilter", 
                         choices = choices,
                         selected = selection)
+
+    })
+
+    # Observers yearsFilter
+    observeEvent(input$yearsFilter,{
+      print("updating locality because of years")
+      param <- list(periodFilter = input$periodFilter, countryFilter = input$countryFilter, 
+                    localityFilter = input$localityFilter, yearsFilter = input$yearsFilter)
+
       
       c(choices, selection) %<-% getChoices(current_df(), "Locality", param, "localityFilter")
       updateSelectInput(session, "localityFilter",
@@ -81,7 +97,14 @@ filterContextServer <- function(id) {
 }
 
 filterContextApp <- function(){
+  library(shiny)
+  library(purrr)
+  library(leaflet)
+  library(dplyr)
+  library(zeallot)
   source("R/utils.R")
+  data("context")
+  
   ui <- fluidPage(
     sidebarLayout(
       sidebarPanel(filterContextInputs("filterContext")),
