@@ -1,6 +1,7 @@
 # Author: S. Metz
 # Mail: sebastian.metz [at] york.ac.uk
 
+# install.packages("plotly", repos="http://cran.rstudio.com/", dependencies=TRUE)
 library(plotly)
 # Ternary plot for composition with current context and selected
 
