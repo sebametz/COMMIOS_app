@@ -37,11 +37,6 @@ mapApp <- function() {
   server <- function(input, output, session){
     mapInfo <- mapServer("map")
     output$plotMap <- renderLeaflet(interactiveMap(mapInfo()))
-    # observeEvent(input$plotMap_marker_click,{
-    #               
-    #              print(input$plotMap_marker_click$id)
-    #                }
-    #              )
   }
   shinyApp(ui, server)
 }

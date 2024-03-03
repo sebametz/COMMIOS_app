@@ -40,38 +40,27 @@ ui <- fluidPage(
                 tabsetPanel(
                   id="dataExplring",
                   tabPanel(
-                  "Map",
-                  leafletOutput("plotMap")
+                  "Distribution",
+                  leafletOutput("plotMap", width = "100%", height = 400),
+                  h5("Time transect"),
+                  plotOutput("plotTransect", click = "transect_click")
                   ),
                   tabPanel(
-                    "PCA",
-                    plotOutput("plotPCA")
+                    "PCA", align = "center",
+                    plotOutput("plotPCA", width = "60vh", height = "60vh", 
+                               dblclick = "pca_dblclick", brush = "pca_brush"),
+                    dataTableOutput("PCAdataTable")
                   ),
                   tabPanel(
                     "Ancestry",
-                    column(4, align = "center",  plotlyOutput("plotAncestry")),
-                   
-                    # To define!!!
-                    column(8, align = "center",  
-                           fluidRow(
-                             plotOutput("plotSteppeVsEEF")
-                           ),
-                           fluidRow(
-                             plotOutput("plotOther")
-                           )
-                           )
+                    column(12, align = "center",  
+                           plotlyOutput("plotAncestry", width = "60vh", height = "60vh"))
                   ),
                   tabPanel(
                     "Table",
                     dataTableOutput("dataTable")
                   )
                 )
-              ),
-              fluidRow(
-                column(4, align = "justify",
-                       verbatimTextOutput("selectedInfo")),
-                column(8, align = "center",
-                       plotOutput("plotComposition"))
               )
             )
         )
@@ -100,11 +89,39 @@ server <- function(input, output) {
  
   #
   # render components ----
-  # render map
-  output$plotMap <- renderLeaflet(interactiveMap(dataContext()))
-  # render pca
+  
+  # Panel distribution
+  
+  transect_df <- ancestry |> left_join(context, by = c("GeneticID" = "GeneticID"))
+  selected_ind <- reactiveVal()
+  # map_val <- reactiveValues(transect_selected = character(0)) 
+  map_selected <- reactive(input$plotMap_marker_click$id)
+  
+  
+  # PROBLEM! See how to update selection without updating the map when select new sample
+  observeEvent(input$transect_click,
+    # map_val$transect_selected <- nearPoints(transect_df, input$transect_click)
+    selected_ind(nearPoints(transect_df, input$transect_click)))
+  
+  observeEvent(input$plotMap_marker_click,
+                 selected_ind(filter(context, GeneticID %in% input$plotMap_marker_click$id)))
+  
+  ## render map
+  output$plotMap <- renderLeaflet(
+    interactiveMap(dataContext(),
+                   flyto = selected_ind()))
+  
+  ## render Transect
+  output$plotTransect <- renderPlot(transectPlot(transect_df, 
+                                                 selection = dataContext()$GeneticID,
+                                                 map_selected = selected_ind()))
+  
+  #
+  
+  # Panel Similarity
+  ## render pca
   output$plotPCA <- renderPlot(plotPCA(dataContext(), dataSetsPCA, 
-                                      selected = input$plotMap_marker_click$id, 
+                                      selected = selected_ind(), 
                                       colourBy = input$colourBy))
   # render ternary - NEEDS IMPROVES
   output$plotAncestry <- renderPlotly(ternaryPlot(dataAncestry()))

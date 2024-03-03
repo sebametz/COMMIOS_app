@@ -44,11 +44,12 @@ getChoices <- function(df, var, param, currentFilter){
 }
 
 # return a leaflet object based on current context database
-interactiveMap <- function(df) {
+interactiveMap <- function(df, flyto = character(0), current_zoom = character(0)) {
+  
   if(nrow(df) == 0){
     map <- leaflet() %>%
       addProviderTiles(providers$Esri.WorldTopoMap) %>%
-      fitBounds(lng1 = -7.64133, lat1 = 50.10319, lng2 = 1.75159, lat2 = 60.15456)
+      setMaxBounds(lng1 = -15, lat1 = 35, lng2 = 15, lat2 = 65)
     map
   } else {
     sexIcons <- iconList(
@@ -58,7 +59,7 @@ interactiveMap <- function(df) {
     )
     map <- leaflet(df) %>%
       addProviderTiles(providers$Esri.WorldTopoMap) %>%
-      fitBounds(lng1 = -7.64133, lat1 = 50.10319, lng2 = 1.75159, lat2 = 60.15456) %>%
+      setMaxBounds(lng1 = -15, lat1 = 35, lng2 = 15, lat2 = 65) %>%
       addMarkers(lng = ~Longitude, lat = ~Latitude, 
                  icon = ~sexIcons[MolecularSex],
                  clusterOptions = markerClusterOptions(), 
@@ -66,8 +67,58 @@ interactiveMap <- function(df) {
                  popup = ~sprintf("<b>Individual GeneticID: %s</b></br>Skeleton Code: %s", GeneticID, SkeletonCode),
                  layerId = ~GeneticID
       )
-    map
   }
+  if(length(flyto) > 0 && nrow(flyto) > 0){
+    map <- map %>%
+      addPopups(flyto$Longitude[1], flyto$Latitude[1],
+                ~sprintf("<b>Individual GeneticID: %s</b></br>Skeleton Code: %s",
+                         flyto$GeneticID[1], flyto$SkeletonCode[1]),
+                options = popupOptions(closeButton = TRUE,
+                                       closeOnClick = F)
+      ) %>%
+      setView(flyto$Longitude[1], flyto$Latitude[1], zoom = 12)
+  }
+  map
+}
+
+# return a ggplot object with the transect plot
+transectPlot <- function(df, selection = character(0), map_selected = character(0)){
+  # Plot data
+  plot <- ggplot(df, mapping = aes(DateMeanInBP, 
+                                   Balkan_N_weight, 
+                                   fill = .data[["Country"]])) +
+    geom_pointrange(aes(ymin = Balkan_N_weight - Balkan_N_se,
+                        ymax = Balkan_N_weight + Balkan_N_se),
+                    position = position_dodge(0.3),
+                    colour = "black", shape = 21, 
+                    alpha = 0.5, size = 0.5)
+  
+  # Adding selected References  
+  if(length(selection)){
+    plot <- plot +
+      geom_pointrange(filter(df, .data[["GeneticID"]] %in% selection),
+                      mapping = aes(
+                        ymin = Balkan_N_weight - Balkan_N_se,
+                        ymax = Balkan_N_weight + Balkan_N_se,
+                        fill = .data[["Country"]]),
+                      position = position_dodge(0.3),
+                      colour = "black", shape = 21, 
+                      alpha = 1, size = 1)
+    
+  }
+  # Adding selected map  
+  if(length(map_selected)){
+    plot <- plot +
+      geom_pointrange(filter(df, .data[["GeneticID"]] %in% map_selected),
+                      mapping = aes(
+                        ymin = .data[["Balkan_N_weight"]] - .data[["Balkan_N_se"]],
+                        ymax = .data[["Balkan_N_weight"]] + .data[["Balkan_N_se"]]),
+                      position = position_dodge(0.3),
+                      colour = "black", shape = 23, 
+                      alpha = 1, size = 1.5, fill = "#F9C80E")
+    
+  }
+  plot
 }
 
 # Filter References for PCA

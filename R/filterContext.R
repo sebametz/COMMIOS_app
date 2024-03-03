@@ -13,7 +13,6 @@ filterContextServer <- function(id) {
   moduleServer(id, function(input, output, session) {
     # Return selection if there is data, otherwise return context
     current_df <- reactive(filterContext(context, input$periodFilter, input$countryFilter, input$localityFilter, input$yearsFilter))
-
     
     # Observers periodFilter 
     observeEvent(input$periodFilter,{
