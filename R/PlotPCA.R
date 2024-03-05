@@ -9,10 +9,10 @@ plotPCA <- function(data,
                     references = character(0),
                     colourBy = "Group"){
   
-  colnames(data)[7] <- "Group"
-  
+  colourBy <<- colourBy
+  colnames(data)[colnames(data) == "GroupID"] <- "Group"
   # Plot modern data
-  plot <- ggplot(tables[["modern"]](), mapping = aes(.data[["PCA1"]], .data[["PCA2"]])) +
+  plot <- ggplot(tables[["modern"]](), mapping = aes(PCA1, PCA2)) +
     geom_point(colour = "black", fill = "gray20",  shape = 21, 
                alpha = 0.5, size = 2)
   
@@ -20,26 +20,27 @@ plotPCA <- function(data,
   if(length(tables[["references"]]())){
     plot <- plot +
         geom_point(tables[["references"]](),
-                   mapping = aes(.data[["PCA1"]], .data[["PCA2"]], fill = .data[["Group"]]),
-                   colour = "black",  shape = 22,
-                   alpha = 0.7, size = 5)
+                   mapping = aes(PCA1, PCA2, fill = Group),
+                   colour = "black",  shape = 24,
+                   alpha = 0.7, size = 4)
   }
   # Plot mapped individuals
   plot <- plot + 
     geom_point(data,
-                mapping = aes(.data[["PCA1"]], .data[["PCA2"]], fill = .data[[colourBy]]), 
+                mapping = aes(PCA1, PCA2, fill = .data[[colourBy]]), 
                 colour = "black",  shape = 25, 
-                alpha = 0.5, size = 2.5)
+                alpha = 0.5, size = 4)
 
 
   # Adding selected individual
+
   if(length(selected)){
     plot <- plot +
       geom_point(filter(data, GeneticID %in% selected),
-                 mapping = aes(.data[["PCA1"]], .data[["PCA2"]]),
+                 mapping = aes(PCA1, PCA2),
                  colour = "black",  shape = 23,
                  fill = "#F9C80E",
-                 alpha = 1, size = 8)
+                 alpha = 1, size = 6)
   }
     
   plot <- plot +

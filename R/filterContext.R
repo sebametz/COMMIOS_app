@@ -5,7 +5,7 @@ filterContextInputs <- function(id) {
     selectInput(NS(id, "countryFilter"), label = "Filter by Country", choices = unique(context$Country), multiple = T),
     selectInput(NS(id, "localityFilter"), label = "Filter by Locality", choices = unique(context$Locality), multiple = T),
     sliderInput(NS(id, "yearsFilter"), "Filter by years (MeanDateBP - 1950): ", min = min(context$DateMeanInBP-1950), max = max(context$DateMeanInBP-1950),
-                value = range(context$DateMeanInBP-1950))
+                value = range(context$DateMeanInBP-1950), ticks=TRUE)
   )
 }
 
