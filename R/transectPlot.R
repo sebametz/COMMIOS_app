@@ -8,7 +8,7 @@ transectPlot <- function(df, selection = character(0), map_selected = character(
                         ymax = Balkan_N_weight + Balkan_N_se),
                     position = position_dodge(0.3),
                     colour = "black", shape = 21, 
-                    alpha = 0.5, size = 0.5)
+                    alpha = 0.5, size = 0.5, stroke = 0.5)
   
   # Adding selected References  
   if(length(selection)){
@@ -20,19 +20,19 @@ transectPlot <- function(df, selection = character(0), map_selected = character(
                         fill = Country),
                       position = position_dodge(0.3),
                       colour = "black", shape = 21, 
-                      alpha = 1, size = 0.5)
+                      alpha = 1, size = 0.5, stroke = 0.5)
     
   }
   # Adding selected map  
-  if(length(map_selected)){
+  if(length(map_selected$GeneticID)){
     plot <- plot +
-      geom_pointrange(filter(df, .data[["GeneticID"]] %in% map_selected),
+      geom_pointrange(filter(df, .data[["GeneticID"]] == map_selected$GeneticID),
                       mapping = aes(
                         ymin = .data[["Balkan_N_weight"]] - .data[["Balkan_N_se"]],
                         ymax = .data[["Balkan_N_weight"]] + .data[["Balkan_N_se"]]),
                       position = position_dodge(0.3),
                       colour = "black", shape = 23, 
-                      alpha = 1, size = 0.7, fill = "#F9C80E")
+                      alpha = 1, size = 0.7, fill = "#F9C80E", stroke = 0.5)
     
   }
   plot +

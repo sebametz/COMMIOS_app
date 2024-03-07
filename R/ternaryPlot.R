@@ -6,7 +6,7 @@ ternaryPlot <- function(df, selected = character(0)){
   df <- if(nrow(df) == 0) ancestry else df
   
   if(length(selected)){
- 
+    
     df$Selection <- if_else(df$GeneticID == selected, "Selected", "Reference")
     df$GroupID[df$GeneticID == selected] <- selected
     

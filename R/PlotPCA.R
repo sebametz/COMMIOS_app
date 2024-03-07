@@ -7,7 +7,8 @@ plotPCA <- function(data,
                     tables, # Table with current_map from the function from before
                     selected = character(0),
                     references = character(0),
-                    colourBy = "Group"){
+                    colourBy = "Group",
+                    zoom = F){
   
   colourBy <<- colourBy
   colnames(data)[colnames(data) == "GroupID"] <- "Group"
@@ -28,25 +29,42 @@ plotPCA <- function(data,
   plot <- plot + 
     geom_point(data,
                 mapping = aes(PCA1, PCA2, fill = .data[[colourBy]]), 
-                colour = "black",  shape = 25, 
+                colour = "black",  shape = 22, 
                 alpha = 0.5, size = 4)
 
 
   # Adding selected individual
 
-  if(length(selected)){
+  if(length(selected$GeneticID)){
     plot <- plot +
-      geom_point(filter(data, GeneticID %in% selected),
+      geom_point(selected$info,
                  mapping = aes(PCA1, PCA2),
                  colour = "black",  shape = 23,
                  fill = "#F9C80E",
                  alpha = 1, size = 6)
   }
-    
+  
+  if(zoom){
+    plot <- plot +
+      xlim(min(data$PCA1)-0.005, max(data$PCA1) + 0.005) +
+      ylim(min(data$PCA2)-0.005, max(data$PCA2) + 0.005)
+  }
+  
+  # Getting shapes and colour for references
+  labels <- list()
+  
+  legends <- plot + 
+    theme(legend.background = element_blank(), 
+          legend.text = element_text(size = 8, colour = "black"), 
+          legend.box = element_blank())
+  
+  labels$colour <- get_legend(legends + guides(shape = FALSE))
+  labels$shape <- get_legend(legends + guides(colour = FALSE))
+  
   plot <- plot +
     theme_bw() +
     theme(legend.position = "none",
-          text = element_text(size = 14))
+          axis.text = element_text(size = 10))
   
-  plot
+  list(plot = plot, labels = labels)
 }
