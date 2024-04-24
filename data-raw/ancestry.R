@@ -6,7 +6,7 @@ library(tibble)
 
 # Data Sheet is "Dataset"
 df <- read_sheet("https://docs.google.com/spreadsheets/d/1VuKkBv5StlB-E0WTyD65q9gBU0LO3srSkuj3qaeXEcg/edit#gid=0", 
-                 sheet = "Ancestry")
+                 sheet = "Ancestry_N")
 
 # transform ancestry datatable for better acces
 ancestry <- df |>
@@ -18,5 +18,5 @@ if(file.exists("data-raw/ancestry.tsv")){
   ancestry <- ancestry |> add_case(current)
 }
 
-write_tsv(ancestry, "data-raw/ancestry.tsv")
+# write_tsv(ancestry, "data-raw/ancestry.tsv")
 save(ancestry, file = "data/ancestry.rda")

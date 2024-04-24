@@ -9,6 +9,7 @@ library(DT)
 library(markdown)
 library(cowplot)
 library(shinyjs)
+library(ggnewscale)
 source("R/utils.R")
 source("R/filterContext.R")
 source("R/filterForPCA.R")
@@ -49,6 +50,8 @@ ui <- fluidPage(
               filterPCAReferencesInputs("filterPCA"),
               h5("Ancestry plot parameters"),
               filterAncientReferencesInputs("filterAncestry"),
+              # Help panel button
+              actionButton("toggleButton", "Hide Help"),
               width = 2
             ),
             # main panel ----
@@ -59,58 +62,51 @@ ui <- fluidPage(
                   tabPanel(
                   "Distribution",
                   align = "center",
-                  leafletOutput("plotMap", width = "100%", height = "60vh"),
-                  h5("Time transect"),
-                  plotOutput("plotTransect", click = "transect_click", width = "60%", height = "30vh"),
-                 
+                  fluidRow(
+                  leafletOutput("plotMap", width = "100vw", height = "55vh"),
                   
+                  # Help panel, welcome!
                    absolutePanel(
-                    id = "helpPanel",
-                    top = 120, right = 5, width = "15%",
+                    id = "helpPanel", align = "justify",
+                    top = 120, left = 600, width = "25vw",
                     draggable = TRUE,
+                    # Help panel 1
                     wellPanel(
-                      HTML(markdownToHTML(fragment.only=TRUE, text=c(
-                        "In this panel you find a map of distribution with all the COMMIOS samples and already published from the UK.
-                        
-To see more information about particular individuals `click` on the map. 
-
-The plot at the bottom is a by individual estimates of EEF ancestry and one standard error for all individuals fitting a 
-three-way admixture model (EEF + WHG + Yamnaya) at P > 0.01 using qpAdm. Select a point to see localization in the map.
-
-Selected individuals will be ploted in the `PCA` and `Ancestry` panel.
-
-Here we show the EEF, WHG and Yamnaya composition of selected individual. 
-
-For further information, go to Individual panel.
-"
-                      ))),
-                      plotOutput("plotComposition")
+                      HTML(markdownToHTML(fragment.only=TRUE, text=c(helpPanel1)))
                     ),
-                    style = "opacity: 0.92"
+                    style = "background: #ffbf00;border-color:black;opacity:0.7"
+                  )
+                  
                   ),
-                  
-                  actionButton("toggleButton", "Toggle Panel")
-                  
-                  
-                  
+                  fluidRow(
+                    column(4,
+                           align = "center", 
+                           strong(helpComposition),
+                           plotOutput("plotComposition", height = 300)),
+                    column(8,
+                           align = "center", 
+                           strong(helpTransect),
+                           plotOutput("plotTransect", click = "transect_click", height = 300))
+                           # plotOutput("plotTransect", click = "transect_click", width = "60vw", height = "30vh"))
+                  ),
                   ),
                   tabPanel(
-                    "PCA", align = "center",
-                    plotOutput("plotPCA", width = "60vh", height = "60vh", 
+                    "PCA", 
+                    align = "center",
+                    plotOutput("plotPCA", width = "60vw", height = "60vh", 
                                dblclick = "plotPCA_dblclick", brush = "plotPCA_brush"),
-                    dataTableOutput("PCAdataTable", width = "80vh", height = "40vh"),
                     
-                    # For colours <- need to solve the shape problem!
+                    dataTableOutput("PCAdataTable", width = "80vw", height = "40vh"),
+                    
+                    # Reference panel <- need to improve the size and colours
                     absolutePanel(
                       top = 120, right = 5, width = 410,
                       draggable = TRUE,
                       wellPanel(
-                        HTML(markdownToHTML(fragment.only=TRUE, text=c(
-                          "PCA labels, move if it is in the way!"
-                        ))),
+                        strong("References"),
                         plotOutput("plotPCAlabels", width = 400, height = 400)
                       ),
-                      style = "opacity: 0.92"
+                      style = "opacity:0.9"
                     ),
                     
                     # For zoom <- renderUI
@@ -120,35 +116,40 @@ For further information, go to Individual panel.
                   tabPanel(
                     "Ancestry",
                     align = "center",  
-                           plotOutput("plotAncestry", width = "80vh", height = "60vh")
+                           plotOutput("plotAncestry", width = "80vw", height = "60vh")
                   ),
                   tabPanel(
                     "Table",
                     dataTableOutput("dataTable")
                   )
                 ),
-              ), 
+              ),        
               width = 10
             )
         )
       )
-     ),
-    # To define
-    tabPanel(
-      title = "About",
-      fluidPage()
-    ),
-    tabPanel(
-      title = "Contact",
-      value = "contact",
-      fluidPage()
-    )
+     )
+    # # To define
+    # tabPanel(
+    #   title = "About",
+    #   fluidPage()
+    # ),
+    # tabPanel(
+    #   title = "Contact",
+    #   value = "contact",
+    #   fluidPage()
+    # )
    )
   )
 
 # Server ----
-server <- function(input, output) {
+server <- function(input, output, session) {
   thematic::thematic_shiny() # to match plots with theme
+  
+  session$onSessionEnded(function() {
+    stopApp()
+  })
+  
   # inputs from servers ----
   dataContext <- filterContextServer("filterContext")
   dataSetsPCA <- filterPCAReferencesServer("filterPCA")
@@ -174,6 +175,21 @@ server <- function(input, output) {
   PCA_labels <- reactiveValues(labels = character(0))
   #
   # render components ----
+  
+  # HELP PANEL and UPDATES
+  ChangeLableHelp <- reactiveValues(HelpButton = FALSE)
+  observeEvent(input$toggleButton, {
+    # Use shinyjs to hide the absolutePanel
+    shinyjs::toggle("helpPanel")
+    ChangeLableHelp$HelpButton <- if_else(ChangeLableHelp$HelpButton == 0, TRUE, FALSE)
+  })
+  
+  observeEvent(input$toggleButton, {
+    # Use shinyjs to hide the absolutePanel
+    updateActionButton(session, "toggleButton", label = if_else(ChangeLableHelp$HelpButton, "Show Help", "Hide Help"))
+  })
+  
+  
   
   # Panel distribution
   
@@ -202,29 +218,19 @@ server <- function(input, output) {
   
   ## render map - updated done
   output$plotMap <- renderLeaflet({
-    interactiveMap(dataContext(), flyto = selected_ind_from_transect)
-    }
+    interactiveMap(dataContext(), flyto = selected_ind_from_transect)}
     )
   
   ## render Transect
   output$plotTransect <- renderPlot(transectPlot(transect_df, 
                                                  selection = dataContext()$GeneticID,
                                                  map_selected = selected_ind), res = 120)
-  
-  #
+
   ## rebder plotComposition
+  output$plotComposition <- renderPlot(if(length(selected_ind)) plotComp(selected_ind$GeneticID, ancestry) else plotComp(df = ancestry), 
+                                       res = 120)
   
-  output$plotComposition <- renderPlot(if(length(selected_ind)) plotComp(selected_ind$GeneticID, ancestry) else plotComp(df = ancestry), res = 94)
-  
-  
-  # Define an observer for the button click
-  observeEvent(input$toggleButton, {
-    # Use shinyjs to hide the absolutePanel
-    shinyjs::toggle("helpPanel")
-  })
-  
-  
-  # Panel Similarity
+  # Panel PCA
   ## render pca
   output$plotPCA <- renderPlot({
     pca <- plotPCA(dataContext(),
@@ -238,59 +244,62 @@ server <- function(input, output) {
   
   ## render table double click PCA
   output$PCAdataTable <- renderDataTable({
-    if(length(input$plotPCA_dblclick)){
-      auxdf <- context |> select(GeneticID, GroupID, Period, PCA1, PCA2) |>
-        mutate(Group = GroupID) |> select(GeneticID, Group, Period, PCA1, PCA2) |>
-        add_case(reference_pca)
+    if(length(input$plotPCA_dblclick)){ 
+      auxdf <- context |> 
+        filter(!GeneticID %in% reference_pca) |>
+        select(GeneticID, GroupID, Period, PCA1, PCA2) |>
+        mutate(Group = GroupID) |>
+        add_case(filter(reference_pca, !GeneticID %in% context$GeneticID))
       aux <- nearPoints(auxdf, input$plotPCA_dblclick, threshold = 5)
-      aux |> group_by(Group, Period) |> count() |> arrange(desc(n))
+      # aux |> group_by(Group) |> count() |> arrange(desc(n))
+      aux
     }
   })
   
  ## render labels
   output$plotPCAlabels <- renderPlot(
-    print(plot_grid(PCA_labels$labels[["colour"]], ncol = 1)), 
-    res = 94
+    print(plot_grid(PCA_labels$labels[["colour"]], 
+                    ncol = 1)), 
+    res = 120
   )
   
-  ## render UI zoom
-  output$zoomPCAbrush <- renderUI({
-    tagList(
-      absolutePanel(
-        id = "zoomPanel",
-        bottom = 20, left = 125, width = "40%",
-        draggable = TRUE,
-        wellPanel(
-          HTML(markdownToHTML(fragment.only=TRUE, text=c(
-            "Zoom plot of PCA brush"
-          ))),
-          plotOutput("plotPCAbrush", width = 300, height = 300)
-          
-        ),
-        style = "opacity: 0.75",
-        actionButton("closeZoom", "Close Panel")
-      )
-    )
-  })
   # Define an observer for the button click
   observeEvent(input$closeZoom, {
     # Use shinyjs to hide the absolutePanel
     shinyjs::hide("zoomPanel")
   })
   
-  observeEvent(input$plotPCA_brush,
-               shinyjs::show("zoomPanel")
-               )
+  observeEvent(input$plotPCA_brush,{
+               # shinyjs::show("zoomPanel")
+    # ## render UI zoom
+    output$zoomPCAbrush <- renderUI({
+      tagList(
+        absolutePanel(
+          id = "zoomPanel",
+          bottom = 20, left = 400, width = 350,
+          draggable = TRUE,
+          wellPanel(
+           strong("Zoom PCA" ),
+           plotOutput("plotPCAbrush", width = 300, height = 300, dblclick = "plotPCA_dblclick")
+          ),
+          style = "opacity: 1",
+          actionButton("closeZoom", "Close", class = "btn-success")
+        )
+      )
+    })
+  }
+ )
   
-  
+  ## render Zoom plot
   output$plotPCAbrush <- renderPlot({
     if(length(input$plotPCA_brush)){
-      res <- brushedPoints(dataContext(), input$plotPCA_brush)
-      plotPCA(res,
+     SelectedPointsBrush <- brushedPoints(dataContext(), input$plotPCA_brush)
+     pcaBrush <-  plotPCABrush(SelectedPointsBrush,
               dataSetsPCA,
               selected = selected_ind,
               colourBy = input$colourBy,
               zoom = T)
+     pcaBrush[["plot"]]
     }
   })
   

@@ -19,8 +19,13 @@ interactiveMap <- function(df, flyto = character(0)) {
       addMarkers(lng = ~Longitude, lat = ~Latitude, 
                  icon = ~sexIcons[MolecularSex],
                  clusterOptions = markerClusterOptions(disableClusteringAtZoom=13), 
-                 label = ~sprintf("Individual GeneticID: %s", GeneticID),
-                 popup = ~sprintf("<b>Individual GeneticID: %s</b></br>Skeleton Code: %s", GeneticID, SkeletonCode),
+                 label = ~sprintf("Individual ID: %s", GeneticID),
+                 popup = ~sprintf("<b>Individual ID: %s</b></br>
+                                  <b>Skeleton code: %s</b></br>
+                                  <b>Period: %s</b></br>
+                                  <b>Group ID: %s</b></br>
+                                  <b>Y-Haplogroup: %s</b></br>
+                                  <b>mtDNA-Haplogroup: %s</b></br>", GeneticID, SkeletonCode, Period, GroupID, YHaplogroup, mtDNAHaplogroup),
                  layerId = ~GeneticID
       )
   }
@@ -28,11 +33,18 @@ interactiveMap <- function(df, flyto = character(0)) {
   if(length(flyto) && length(flyto$GeneticID)) {
     map <- map %>%
         addPopups(flyto$info$Longitude, flyto$info$Latitude+0.008,
-                  ~sprintf("<b>Individual GeneticID: %s</b></br>Skeleton Code: %s",
-                           flyto$info$GeneticID[1], flyto$info$SkeletonCode[1]),
+                  ~sprintf("<b>Individual ID: %s</b></br>
+                                  <b>Skeleton code: %s</b></br>
+                                  <b>Period: %s</b></br>
+                                  <b>Group ID: %s</b></br>
+                                  <b>Y-Haplogroup: %s</b></br>
+                                  <b>mtDNA-Haplogroup: %s</b></br>", flyto$info$GeneticID[1], flyto$info$SkeletonCode[1], 
+                           flyto$info$Period[1], flyto$info$GroupID[1],
+                           flyto$info$YHaplogroup[1], flyto$info$mtDNAHaplogroup[1]),
                   options = popupOptions(closeButton = TRUE,
                                          closeOnClick = T)) %>%
        setView(flyto$info$Longitude[1], flyto$info$Latitude[1], zoom = 12)
   }
   map
 }
+

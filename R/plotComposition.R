@@ -31,10 +31,10 @@ plotComp <- function(selected = character(0), df){
     
     p3 <- ggplot(results_qpadm, aes(x = Label, y = weight, fill = Left)) +
       geom_bar(stat="identity", color = "black", position = "fill") +
-      # geom_errorbar(aes(ymin=(SDpos-se), ymax=(SDpos+se)), width=.2, 
-      #               position = "identity") +
+      geom_errorbar(aes(ymin=(SDpos-se), ymax=(SDpos+se)), width=.2,
+                    position = "identity") +
       geom_text(aes(label = str_c(round(weight*100, 1), "%")), 
-                color = "white", position = position_stack(vjust = 0.5),size = 8) +
+                color = "white", position = position_stack(vjust = 0.5)) +
       scale_fill_manual(values = colours) +
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       scale_x_discrete(limits=rev) +
@@ -43,10 +43,10 @@ plotComp <- function(selected = character(0), df){
       ylab(label = "") +
       xlab(label = "") +
       theme_minimal() +
-      theme(axis.text = element_text(colour = "black", size = 8), 
+      theme(axis.text = element_text(colour = "black", size = 10), 
             legend.position = "top",
-            legend.text  = element_text(colour = "black", size = 8))
+            legend.text  = element_text(colour = "black", size = 11))
     p3
-  }}
+  }} else {ggplot() + theme(rect = element_blank())}
 }
 
