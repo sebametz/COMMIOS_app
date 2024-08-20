@@ -5,7 +5,7 @@ account: sebametz
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11851902
-bundleId: 9005704
+bundleId: 9005808
 url: https://sebametz.shinyapps.io/COMMIOS_app/
 version: 1
 asMultiple: FALSE

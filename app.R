@@ -6,12 +6,14 @@ library(htmlwidgets)
 library(shinyWidgets)
 library(markdown)
 library(plotly)
+library(svglite)
 source("R/functions.R")
 data("data_ref")
 
 
 ## ADD:
 # - Sex parameter
+# - Colours PCA and References size
 
 # define parameters ----
 
