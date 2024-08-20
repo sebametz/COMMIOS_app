@@ -5,9 +5,9 @@ account: sebametz
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11851902
-bundleId: 8536237
+bundleId: 9005704
 url: https://sebametz.shinyapps.io/COMMIOS_app/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: .Rbuildignore|.Rprofile|data-raw/ancestry.R|data-raw/context.R|data-raw/references_PCA.R|data-raw/sequencing.R|data-raw/sequencing.tsv
+ignoredFiles: .Rbuildignore|.Rprofile|other/ScreenMap1.svg|other/ScreenTimeSeries.svg|toRemove
