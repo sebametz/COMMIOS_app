@@ -963,19 +963,6 @@
       ],
       "Hash": "7ce2733a9826b3aeb1775d56fd305472"
     },
-    "markdown": {
-      "Package": "markdown",
-      "Version": "1.13",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "R",
-        "commonmark",
-        "utils",
-        "xfun"
-      ],
-      "Hash": "074efab766a9d6360865ad39512f2a7e"
-    },
     "memoise": {
       "Package": "memoise",
       "Version": "2.0.1",
@@ -1512,17 +1499,6 @@
       ],
       "Hash": "54b26646816af9960a4c64d8ceec75d6"
     },
-    "shinyBS": {
-      "Package": "shinyBS",
-      "Version": "0.61.1",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "htmltools",
-        "shiny"
-      ],
-      "Hash": "e44255f073ecdc26ba6bc2ce3fcf174d"
-    },
     "shinyWidgets": {
       "Package": "shinyWidgets",
       "Version": "0.8.6",
@@ -1944,13 +1920,6 @@
       "Source": "Repository",
       "Repository": "RSPM",
       "Hash": "9cb28d11799d93c953f852083d55ee9e"
-    },
-    "zeallot": {
-      "Package": "zeallot",
-      "Version": "0.1.0",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "ee9b643aa8331c45d8d82eb3a137c9bc"
     }
   }
 }
