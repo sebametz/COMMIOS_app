@@ -1,0 +1,17 @@
+.treejs .treejs-switcher::before,
+.treejs .treejs-switcher:hover::before {
+  border-top: 4px solid white;
+  }
+                              
+#zoom_info {
+  justify-content: center;
+  align-items: center; 
+  background-color:rgba(255,255,255,0.8);
+}
+
+li {
+  color: #5bc0de;
+  padding: 0;
+}
+
+.checkbtn {padding: 0;}
