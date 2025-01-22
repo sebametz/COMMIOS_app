@@ -418,7 +418,7 @@ server <- function(input, output, session){
   # selected from the table
   observe({
     req(input$table_input_rows_selected)
-    reactive_objects$selection <- df[input$table_input_rows_selected,]
+    reactive_objects$selection <- reactive_objects$context[input$table_input_rows_selected,]
   })
   
   # if any click occurred in transect
