@@ -1,14 +1,14 @@
 library(tidyverse)
 library(shinyWidgets)
-data("data_ref")
+data("aadr_ref_v62")
 
 
 # For PCA plot only significant individuals
-locality_param_choices <- data_ref |>
-  filter(DataRef == "AADR_UK") |>
-  filter(Period != "Mesolithic")|>
-  filter(str_detect(`Usage Note`, "Reference;")) |>
-  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Modern"))) |>
+locality_param_choices <- aadr_ref_v62 |>
+  filter(str_detect(`Usage Note`, "Reference")) |>
+  filter(!str_detect(`Usage Note`, "Quality Alert")) |>
+  filter(!Period %in% c("Mesolithic", "-"))|>
+  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
   arrange(desc(`Date Mean in BP`)) |>
   select(Country, `Unique Locality Name`, `Genetic ID`, Period) |>
   # distinct(Country, `Unique Locality Name`, `Genetic ID`) |>
@@ -29,12 +29,12 @@ save(locality_tree, file = "data/locality_tree.rda")
 
 
 # Locality ternary plot
-locality_param_choices2 <- data_ref |>
+locality_param_choices2 <- aadr_ref_v62 |>
   filter(DataRef == "AADR_UK") |>
   filter(Period != "Mesolithic")|>
   filter(`qpAdm Pvalue` > 0.01) |>
   filter(str_detect(`Usage Note`, "Reference;")) |>
-  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Modern"))) |>
+  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
   arrange(desc(`Date Mean in BP`)) |>
   select(Country, `Unique Locality Name`, `Genetic ID`, Period) |>
   # distinct(Country, `Unique Locality Name`, `Genetic ID`) |>
@@ -50,5 +50,7 @@ save(locality_params2, file = "data/locality_params2.rda")
 
 locality_tree2 <- create_tree(locality_params2)
 save(locality_tree2, file = "data/locality_tree2.rda")
+
+
 
 

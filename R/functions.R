@@ -1,4 +1,13 @@
 
+generate_colors <- function(n = 1000) {
+  # Generate a palette of distinct colors using the hsv function
+  colorspace::rainbow_hcl(n, c = 100, l = 70) # Chroma and Luminance fixed for good contrast
+}
+
+# # Example usage
+# colors_list <- generate_colors(1000)
+
+
 # function to update reactive context table according to the period, sex and country selected on the map
 # context: actual data used in the app
 # df: not modified dataset
@@ -7,8 +16,14 @@
 update_context <- function(context, df, values){
 
   # Periods
-  context.n <- df |>
-    filter(Period %in% values$periods) 
+  if(length(values$periods) == 7){
+    context.n <- df |>
+      filter(Period %in% values$periods)  
+  }else{
+    context.n <- df |>
+      filter(!Period %in% values$periods)
+  }
+   
   
   # Country
   context.n <- context.n |>
@@ -80,13 +95,11 @@ plotMap <- function(df = tibble()) {
         # Popup information
         popup = ~ paste0(
           "Genetic ID: ", `Genetic ID`,
-          # "<br> Master ID: ", `Master ID`,
           "<br> Molecular Sex: ", `Molecular Sex`,
-          "<br> Locality: ", `Correct Locality Name`,
+          "<br> Locality: ", `Unique Locality Name`,
           "<br> Period: ", Period, 
-          "<br> Usage Note: ", if_else(Type == "Reference", "Good quality", "Check quality"),
-          "<br> Warnings: ", Warnings,
-          "<br> SNPs Check: ", SNPs),
+          "<br> Usage Note: ", `Usage Note`,
+          "<br> SNPs hit on autosomal (1240k snpset): ", `SNPs hit on autosomal (1240k snpset)`),
         
         # Label information
         label = ~paste0("Individual ", `Genetic ID`, " (", `Molecular Sex`, ")") 
@@ -110,10 +123,10 @@ plotMap <- function(df = tibble()) {
 # - Select colour depending on the Country, use unfilled circles and filled one for selected
 # - if context changes, extract those individuals from aadr_db, and highlight. The rest go in gray
 
-plotTransect <- function(data, data_ref, selected = NULL, plotBy = "EEF") {
+plotTransect <- function(data, aadr_ref_v62, selected = NULL, plotBy = "EEF") {
   
   df.f <- data |>
-    mutate(plot = if_else(`Genetic ID` %in% data_ref$`Genetic ID`, "plot", "other")) 
+    mutate(plot = if_else(`Genetic ID` %in% aadr_ref_v62$`Genetic ID`, "plot", "other")) 
  
   # Check variables and change plot characteristics
   if(length(selected)) {
@@ -157,7 +170,7 @@ plotTransect <- function(data, data_ref, selected = NULL, plotBy = "EEF") {
     # Highlighted points
     geom_point(data = filter(df.p, plot == "highlight"), 
                colour= "black", fill = "#ffe75e",
-               size = 10, alpha = 1, shape = 23) +
+               size = 8, alpha = 0.9, shape = 23) +
     # y scale
     scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
     
@@ -169,7 +182,7 @@ plotTransect <- function(data, data_ref, selected = NULL, plotBy = "EEF") {
     scale_x_reverse(limits = c(5900, 600)) +
     
     # Add annotation
-    geom_vline(xintercept = c(1540, 1907,2700,3500,4400), colour = "gray20", linetype = 5) +
+    geom_vline(xintercept = c(885,1540, 1907,2700,3500,4400), colour = "gray20", linetype = 5) +
     # annotate("text", x=6600, y = 0.9, label = "Mesolithic") +
     annotate("text", x=5150, y=0.9, label= "Neolithic", size = 6, colour = "gray20") +
     annotate("text", x=3950, y=0.9, label= "C/EBA", size = 6, colour = "gray20") +
@@ -193,13 +206,13 @@ plotTransect <- function(data, data_ref, selected = NULL, plotBy = "EEF") {
 
 # return a ggplot object with a PCA plot
 # data = df,
-# data_ref = context,
+# aadr_ref_v62 = context,
 # selected = map / transect selected individual
 # references = modern or ancient references to plot
-get_pca <- function(data, data_ref = NULL, selected = NULL, references = NULL, locality = NULL, limits = NULL, colours = NULL){
+get_pca <- function(data, aadr_ref_v62 = NULL, selected = NULL, references = NULL, locality = NULL, limits = NULL, colours = NULL){
   
-  shapes <- c(21, rep(23,7))
-  names(shapes) <- c("Modern", "Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings")
+  shapes <- c(21, rep(23,8))
+  names(shapes) <- c("Modern", "Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval")
   
   # Add Modern
   data_aux <- filter(data, DataRef == "AADR_Modern")
@@ -211,17 +224,17 @@ get_pca <- function(data, data_ref = NULL, selected = NULL, references = NULL, l
   # Add groups references
   if(length(references)) {
     
-    data_ref_filtered <- data |>
+    aadr_ref_v62_filtered <- data |>
       filter(Group %in% references) |>
-      mutate(Period = factor(Period, levels = c("Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Modern"))) |>
+      mutate(Period = factor(Period, levels = c("Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
       arrange(desc(Period), Group)
       
       
     
     data_aux <- data_aux |>
-      add_case(data_ref_filtered)
+      add_case(aadr_ref_v62_filtered)
     
-    pca <- pca + geom_point(data_ref_filtered, 
+    pca <- pca + geom_point(aadr_ref_v62_filtered, 
                       mapping = aes(x = PCA1, y = PCA2, fill = Group, shape = Period),
                       size = 3, colour = "black") +
       scale_shape_manual(values = shapes) +
@@ -233,31 +246,31 @@ get_pca <- function(data, data_ref = NULL, selected = NULL, references = NULL, l
   # Add Localities references
   if(length(locality)){
     
-    data_ref_filtered <- data |>
+    aadr_ref_v62_filtered <- data |>
       filter(`Genetic ID` %in% locality)
     
     data_aux <- data_aux |>
-      add_case(data_ref_filtered)
+      add_case(aadr_ref_v62_filtered)
     
-    pca <- pca + geom_point(data_ref_filtered, 
+    pca <- pca + geom_point(aadr_ref_v62_filtered, 
                             mapping = aes(x = PCA1, y = PCA2),
-                            size = 6, colour = "black", shape = 24,
-                            fill = "#0058ff")
+                            size = 5, alpha = 0.7, colour = "black", shape = 24,
+                            fill = "#ff5f00")
     
   }
   
   if(length(selected)) {
     if(nrow(selected)>0){
       
-      data_ref_filtered <- filter(data, `Genetic ID` %in% selected)
+      aadr_ref_v62_filtered <- filter(data, `Genetic ID` %in% selected)
         
       data_aux <- data_aux |>
-        add_case(data_ref_filtered)
+        add_case(aadr_ref_v62_filtered)
       
       pca <- pca +
-        geom_point(data_ref_filtered, 
+        geom_point(aadr_ref_v62_filtered, 
                    mapping = aes(x = PCA1, y = PCA2), 
-                   shape = 23, size = 10, fill = "#ffe75e", 
+                   shape = 23, size = 8, alpha = 0.9, fill = "#ffe75e", 
                    colour = "black")
     }
   }
@@ -325,7 +338,7 @@ get_ternary <- function(data, data_context = NULL, selected = NULL, references =
                                                           "<br> Genetic ID: ", df$`Genetic ID`[i],
                                                           # "<br> Master ID: ", df$`Master ID`[i],
                                                           "<br> Molecular Sex: ", df$`Molecular Sex`[i],
-                                                          "<br> Locality: ", df$`Correct Locality Name`[i],
+                                                          "<br> Locality: ", df$`Unique Locality Name`[i],
                                                           "<br> Period: ", df$Period[i],
                                                           "<br> Contributions:",
                                                           "<br> - EEF: ", round(df$EEF[i], digits = 2), " ± ", round(df$`EEF SE`[i], digits = 2),
@@ -403,7 +416,7 @@ get_ternary <- function(data, data_context = NULL, selected = NULL, references =
               marker = list(
                 symbol = "triangle-up", 
                 size = 16,
-                color = "#0058ff",
+                color = "#ff5f00",
                 line = list('width' = 0.75, 'color' = "black")
               ),
               showlegend = F
@@ -492,13 +505,3 @@ get_composition <- function(data) {
   }
   p
 }
-
-
-# 
-# get_colours <- function(){
-  safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#F0E442", "#117733", "#E69F00", "#332288", "#AA4499",
-                               "#44AA99", "#999999", "#882255", "#661100", "#6699CC",  "#999933",
-                               "#E69F00", "#56B4E9", "#009E73", "#DDCC77", "#0072B2",
-                               "#D55E00", "#CC79A7")
-#   safe_colorblind_palette
-# }

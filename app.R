@@ -9,24 +9,22 @@ library(plotly)
 library(svglite)
 library(prompter)
 library(gridExtra)
-
+set.seed(1423)
 source("R/functions.R")
 
-data("data_ref")
+data("aadr_ref_v62")
 data("locality_params")
 data("locality_tree")
 
 data("locality_params2")
 data("locality_tree2")
 
-data("custom_palette")
-
 options(warn=-1)
 
 # define parameters ----
 
-periods_param_choices <- c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings") #"Mesolithic", 
-names(periods_param_choices) <- c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings") #"Mesolithic",
+periods_param_choices <- c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval") #"Mesolithic", 
+names(periods_param_choices) <- c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval") #"Mesolithic",
 
 timeseries_param_choices <- c("EEF", "WHG", "Steppe")
 names(timeseries_param_choices) <- c("Early European Farmers (EEF)", "Western hunter-gatherer (WHG)", "Yamnaya pastoralists (Steppe)")
@@ -34,23 +32,24 @@ names(timeseries_param_choices) <- c("Early European Farmers (EEF)", "Western hu
 molecular_sex_choices <- c("F", "M", "U")
 names(molecular_sex_choices) <- c("Female", "Male", "Undetermined")
 
-pca_param_choices  <- data_ref |>
-  mutate(Period = factor(Period, levels = c("Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Modern"))) |>
+pca_param_choices  <- aadr_ref_v62 |>
+  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
   arrange(desc(`Date Mean in BP`)) |>
   distinct(Period, Country, Group) |>
   mutate(order = str_c(str_c(Period, Country, sep = ";"), Group, sep = ";")) |>
   arrange(order) |>
   arrange(Period) |>
+  filter(!is.na(Group)) |>
   select(Period, Country, Group) 
 
-country_param_choices <- unique(filter(data_ref, DataRef == "AADR_UK")$Country)
+country_param_choices <- unique(filter(aadr_ref_v62, DataRef == "AADR_UK")$Country)
 
 
 #addapt ternary plot
-ternary_param_choices <- data_ref |>
+ternary_param_choices <- aadr_ref_v62 |>
   filter(DataRef != "AADR_Modern") |>
   filter(`qpAdm Pvalue` > 0.01) |>
-  mutate(Period = factor(Period, levels = c("Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Modern"))) |>
+  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
   arrange(desc(`Date Mean in BP`)) |>
   distinct(Period, Country, Group) |>
   mutate(order = str_c(str_c(Period, Country, sep = ";"), Group, sep = ";")) |>
@@ -58,8 +57,8 @@ ternary_param_choices <- data_ref |>
   arrange(Period) |>
   select(Period, Country, Group)
 
-
-names(custom_palette) <- unique(pca_param_choices$Group)
+custom_palette <- generate_colors(n = length(unique(pca_param_choices$Group)))
+names(custom_palette) <- sample(unique(pca_param_choices$Group))
 
 # App UI ----
 ui <- fluidPage(
@@ -98,7 +97,8 @@ ui <- fluidPage(
                                                             add_prompt(tags$div(periods_param_choices[3], style = "padding: 6px 12px"), message = "Bronze Age"),
                                                             add_prompt(tags$div(periods_param_choices[4], style = "padding: 6px 12px"), message = "Iron Age"),
                                                             add_prompt(tags$div(periods_param_choices[5], style = "padding: 6px 12px"), message = names(periods_param_choices[5])),
-                                                            add_prompt(tags$div(periods_param_choices[6], style = "padding: 6px 12px"), message = names(periods_param_choices[6]))
+                                                            add_prompt(tags$div(periods_param_choices[6], style = "padding: 6px 12px"), message = names(periods_param_choices[6])),
+                                                            add_prompt(tags$div(periods_param_choices[7], style = "padding: 6px 12px"), message = names(periods_param_choices[7]))
                                                           ),
                                                           choiceValues = names(periods_param_choices),
                                                           # choices = periods_param_choices,
@@ -194,7 +194,7 @@ ui <- fluidPage(
                                                                     choices = create_tree(pca_param_choices),
                                                                     returnValue = "text",
                                                                     closeDepth = 0,
-                                                                    selected = c("Scottish","English", "British", "Spanish", "French")
+                                                                    selected = c("Scottish","English", "Irish", "Spanish", "French")
                                                           ),
                                                           treeInput("pca_LocParam", label = "Select Locality: ",
                                                                     choices = locality_tree,
@@ -317,11 +317,12 @@ server <- function(input, output, session){
   })
   
   # prepare data to use 
-  data_ref_mod <- data_ref |>
-    filter(Period != "Mesolithic") |>
-    separate(`Usage Note`, sep = ";", into = c("Type", "Assessment", "Warnings", "isRef", "SNPs"), extra = "drop", remove = F)
-  
-  df <- data_ref_mod |>
+  aadr_ref_v62_mod <- aadr_ref_v62 |>
+    filter(!Period %in% c("Mesolithic", "-"))
+  # |>
+  #   separate(`Usage Note`, sep = ";", into = c("Type", "Assessment", "Warnings", "isRef", "SNPs"), extra = "drop", remove = F)
+  # 
+  df <- aadr_ref_v62_mod |>
     filter(DataRef == "AADR_UK")
   
   
@@ -353,7 +354,7 @@ server <- function(input, output, session){
   # timeseries plot
   .seriesPlot <- reactive({
     plotTransect(data = df, 
-                 data_ref = reactive_objects$context, 
+                 aadr_ref_v62 = reactive_objects$context, 
                  selected = reactive_objects$selection,
                  plotBy = reactive_objects$transect_par)
   })
@@ -371,10 +372,20 @@ server <- function(input, output, session){
   
   # # Table interface ----
   output$table_input=DT::renderDataTable({
-    columns <- c(colnames(data_ref)[1:12], colnames(data_ref)[14:33], colnames(data_ref)[59], colnames(data_ref)[60], colnames(data_ref)[34], colnames(data_ref)[38:44])
+    # columns <- c(colnames(aadr_ref_v62)[1:12], colnames(aadr_ref_v62)[14:33], colnames(aadr_ref_v62)[59], colnames(aadr_ref_v62)[60], colnames(aadr_ref_v62)[34], colnames(aadr_ref_v62)[38:44])
+    columns <- c("Genetic ID","Master ID","Skeletal code","Skeletal element","Published Year",
+                 "Publication abbreviation","DOI","ENA Study Accession","Dating method","Date Mean in BP",
+                 "Date SD in BP","Full date","Group","Period","Unique Locality Name","Political Entity",
+                 "Latitude","Longitude","Family",
+                 "SNPs hit on autosomal (1240k snpset)","SNPs hit on autosomal (HO snpset)",
+                 "Molecular Sex","Y Haplogroup ISOGG","mtDNA haplogroup", "Usage Note",
+                 "PCA1","PCA2","PCA3","qpAdm Pvalue","Steppe","WHG","EEF","Quality_score" )
     # print(columns)
     table <- reactive_objects$context |>
-      select(all_of(columns))
+      select(all_of(columns)) |>
+      mutate(PCA1 = round(PCA1, digits = 4), PCA2 = round(PCA2, digits = 4), PCA3 = round(PCA3, digits = 4),
+             `qpAdm Pvalue` = round(`qpAdm Pvalue`, digits = 4), Steppe = round(Steppe, digits = 4),
+             EEF = round(EEF, digits = 4), WHG = round(WHG, digits = 4))
     # Need to round values!!
     DT::datatable(table, selection = "single", rownames = FALSE, filter = "top",
                   options = list(scrollY = '600px', paging = FALSE, scrollX = TRUE, dom = "ltipr")
@@ -454,17 +465,17 @@ server <- function(input, output, session){
       paste0("<br>Information: ",
              "<br> Genetic ID: ", point$`Genetic ID`,
              "<br> Molecular Sex: ", point$`Molecular Sex`,
-             "<br> Locality: ", point$`Correct Locality Name`,
+             "<br> Locality: ", point$`Unique Locality Name`,
              "<br> Period: ", point$Period,
              "<br> % EEF: ", round(point$EEF, digits = 2), " ± ", round(point$`EEF SE`, digits = 2),
              "<br> % Steppe: ", round(point$Steppe, digits = 2), " ± ", round(point$`Steppe SE`, digits = 2),
-             "<br> Status (apAdm P-value): ", if_else(point$`qpAdm Pvalue` > 0.01,
+             "<br> Status (qpAdmixture P-value > 0.01): ", if_else(point$`qpAdm Pvalue` > 0.01,
                                                       paste0('<span style="color: #77b300;">', paste0(round(point$`qpAdm Pvalue`, digits = 4),'</span>')),
                                                       paste0('<span style="color: #c00;">', paste0(round(point$`qpAdm Pvalue`, digits = 4), ' (Warning) </span>'))
              ),
-             "<br> Sample Quality: ", if_else(point$`qpAdm Pvalue` > 0.01,
-                                              paste0('<span style="color: #77b300;">', paste0(point$SNPs,'</span>')),
-                                              paste0('<span style="color: #c00;">', paste0(point$SNPs, '</span>'))
+             "<br> Sample Quality: ", if_else(point$Quality_score >= 8,
+                                              paste0('<span style="color: #77b300;">', paste0("Good quality sample",'</span>')),
+                                              paste0('<span style="color: #c00;">', paste0("Quality Alert: Check metadata", '</span>'))
              )
       )
     )
@@ -496,7 +507,7 @@ server <- function(input, output, session){
   
   # PCA plot
   .pcaPlot <- reactive({
-    pca <- get_pca(data_ref_mod, reactive_objects$context, 
+    pca <- get_pca(aadr_ref_v62_mod, reactive_objects$context, 
             references = reactive_objects$pca_references, 
             selected = reactive_objects$selection,
             locality = reactive_objects$pca_locality, colours = custom_palette)
@@ -535,7 +546,7 @@ server <- function(input, output, session){
   # PCA clicked individual info ----
   observe({
     req(input$pca_click)
-    selection <- nearPoints(data_ref_mod, input$pca_click, maxpoints = 5)
+    selection <- nearPoints(aadr_ref_v62_mod, input$pca_click, maxpoints = 5)
     aux <- filter(selection, Period != "Present")
     selection <- if(nrow(aux) > 0) aux[1,] else selection[1,]
     reactive_objects$pca_selection <- selection
@@ -547,12 +558,12 @@ server <- function(input, output, session){
     HTML(
       paste0("<br> Genetic ID: ", point$`Genetic ID`,
              "<br> Molecular Sex: ", point$`Molecular Sex`,
-             "<br> Locality: ", point$`Correct Locality Name`,
+             "<br> Locality: ", point$`Unique Locality Name`,
              "<br> Period ", point$Period,
              "<br> Date: ", point$`Full date`,
-             "<br> Sample Quality: ", if_else(point$SNPs == "SNPs 1240k > 100k",
-                                              paste0('<span style="color: #77b300;">', paste0(point$SNPs,'</span>')),
-                                              paste0('<span style="color: #f80;">', paste0(point$SNPs, '</span>'))
+             "<br> Sample Quality: ", if_else(point$Quality_score >= 8,
+                                              paste0('<span style="color: #77b300;">', paste0("Good quality sample",'</span>')),
+                                              paste0('<span style="color: #f80;">', paste0("Quality Alert: Check metadata", '</span>'))
              )
       )
     )
@@ -562,7 +573,7 @@ server <- function(input, output, session){
   observe({
     req(input$pca_brush)
     limits <- c(input$pca_brush$xmin, input$pca_brush$xmax, input$pca_brush$ymin, input$pca_brush$ymax)
-    # limits <- brushedPoints(data_ref_mod, input$pca_brush, allRows = TRUE)$selected_
+    # limits <- brushedPoints(aadr_ref_v62_mod, input$pca_brush, allRows = TRUE)$selected_
     reactive_objects$limits <- limits
   })
   
@@ -600,7 +611,7 @@ server <- function(input, output, session){
   })
   
   output$plot_zoom <- renderPlot(
-    get_pca(data_ref_mod, reactive_objects$context, 
+    get_pca(aadr_ref_v62_mod, reactive_objects$context, 
             references = reactive_objects$pca_references, 
             selected = reactive_objects$selection, 
             locality = reactive_objects$pca_locality,
@@ -618,8 +629,8 @@ server <- function(input, output, session){
   
   observeEvent(input$clear_pca, {
     reactive_objects$pca_locality <- NULL
-    reactive_objects$pca_references <- c("Scottish","English", "British", "Spanish", "French")
-    updateTreeInput("pca_param", selected = c("Scottish","English", "British", "Spanish", "French"))
+    reactive_objects$pca_references <- c("Scottish","English", "Spanish", "French")
+    updateTreeInput("pca_param", selected = c("Scottish","English", "Spanish", "French"))
     updateTreeInput("pca_LocParam", selected = character(0))
   })
   
@@ -652,7 +663,7 @@ server <- function(input, output, session){
   
   # PCA plot
   .ternaryPlot <- reactive({
-    get_ternary(data_ref_mod, reactive_objects$context,
+    get_ternary(aadr_ref_v62_mod, reactive_objects$context,
                 references = reactive_objects$ternary_ref,
                 selected = reactive_objects$selection,
                 locality = reactive_objects$ternary_locality
@@ -669,8 +680,8 @@ server <- function(input, output, session){
   
   observeEvent(input$clear_ternary, {
     reactive_objects$ternary_locality <- NULL
-    reactive_objects$ternary_ref <- c("Scottish","English", "British", "Spanish", "French")
-    updateTreeInput("ternary_param", selected = c("Scottish","English", "British", "Spanish", "French"))
+    reactive_objects$ternary_ref <- c("Scottish","English", "Spanish", "French")
+    updateTreeInput("ternary_param", selected = c("Scottish","English", "Spanish", "French"))
     updateTreeInput("ternary_LocParam", selected = character(0))
   })
   
