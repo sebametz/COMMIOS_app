@@ -33,14 +33,26 @@ molecular_sex_choices <- c("F", "M", "U")
 names(molecular_sex_choices) <- c("Female", "Male", "Undetermined")
 
 pca_param_choices  <- aadr_ref_v62 |>
-  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
+  mutate(Dates_Choices = case_when(
+    Period == "Neolithic" ~ "3950–2450 BC",
+    Period == "C/EBA" ~ "2450–1550 BC",
+    Period == "BA" ~ "1550–750 BC",
+    Period == "IA" ~ "750 BC to AD 43",
+    Period == "Romans" ~ "AD 43 to AD 410",
+    Period == "Early Medieval/Vikings" ~ "AD 410 to AD 885",
+    Period == "Medieval" ~ "AD 885 to AD 750",
+    Period == "Modern" ~ "Present",
+    TRUE ~ "-"
+  )) |>
+  mutate(Dates_Choices = factor(Dates_Choices, levels = c("3950–2450 BC", "2450–1550 BC","1550–750 BC","750 BC to AD 43","AD 43 to AD 410","AD 410 to AD 885","AD 885 to AD 750", "Present"))) |>
+  # mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
   arrange(desc(`Date Mean in BP`)) |>
-  distinct(Period, Country, Group) |>
-  mutate(order = str_c(str_c(Period, Country, sep = ";"), Group, sep = ";")) |>
+  distinct(Dates_Choices, Country, Group) |>
+  mutate(order = str_c(str_c(Dates_Choices, Country, sep = ";"), Group, sep = ";")) |>
   arrange(order) |>
-  arrange(Period) |>
+  arrange(Dates_Choices) |>
   filter(!is.na(Group)) |>
-  select(Period, Country, Group) 
+  select(Dates_Choices, Country, Group) 
 
 country_param_choices <- unique(filter(aadr_ref_v62, DataRef == "AADR_UK")$Country)
 
@@ -49,13 +61,27 @@ country_param_choices <- unique(filter(aadr_ref_v62, DataRef == "AADR_UK")$Count
 ternary_param_choices <- aadr_ref_v62 |>
   filter(DataRef != "AADR_Modern") |>
   filter(`qpAdm Pvalue` > 0.01) |>
-  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
+  mutate(Dates_Choices = case_when(
+    Period == "Neolithic" ~ "3950–2450 BC",
+    Period == "C/EBA" ~ "2450–1550 BC",
+    Period == "BA" ~ "1550–750 BC",
+    Period == "IA" ~ "750 BC to AD 43",
+    Period == "Romans" ~ "AD 43 to AD 410",
+    Period == "Early Medieval/Vikings" ~ "AD 410 to AD 885",
+    Period == "Medieval" ~ "AD 885 to AD 750",
+    Period == "Modern" ~ "Present",
+    TRUE ~ "-"
+  )) |>
+  mutate(Dates_Choices = factor(Dates_Choices, levels = c("3950–2450 BC", "2450–1550 BC","1550–750 BC","750 BC to AD 43",
+                                                          "AD 43 to AD 410","AD 410 to AD 885","AD 885 to AD 750", "Present"))) |>
   arrange(desc(`Date Mean in BP`)) |>
-  distinct(Period, Country, Group) |>
-  mutate(order = str_c(str_c(Period, Country, sep = ";"), Group, sep = ";")) |>
+  distinct(Dates_Choices, Country, Group) |>
+  mutate(order = str_c(str_c(Dates_Choices, Country, sep = ";"), Group, sep = ";")) |>
   arrange(order) |>
-  arrange(Period) |>
-  select(Period, Country, Group)
+  arrange(Dates_Choices) |>
+  filter(!is.na(Group)) |>
+  select(Dates_Choices, Country, Group) 
+
 
 custom_palette <- generate_colors(n = length(unique(pca_param_choices$Group)))
 names(custom_palette) <- sample(unique(pca_param_choices$Group))
