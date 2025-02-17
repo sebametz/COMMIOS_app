@@ -1,5 +1,3 @@
-Sys.setenv(RENV_PATHS_CACHE = "./renv/cache")
-Sys.setenv(RENV_PATHS_ROOT = "~/.cache/R/renv")
 library(shiny)
 library(tidyverse)
 library(shinyjs)
