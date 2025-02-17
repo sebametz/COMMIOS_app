@@ -1,3 +1,4 @@
+Sys.setenv(RENV_PATHS_CACHE = "./renv/cache")
 library(shiny)
 library(tidyverse)
 library(shinyjs)
