@@ -379,7 +379,7 @@ server <- function(input, output, session){
   })
   # timeseries plot
   .seriesPlot <- reactive({
-    plotTransect(data = df, 
+    plotTransect(data = filter(df, !str_detect(`Usage Note`, "Quality Alert")), 
                  aadr_ref_v62 = reactive_objects$context, 
                  selected = reactive_objects$selection,
                  plotBy = reactive_objects$transect_par)

@@ -94,6 +94,9 @@ plotMap <- function(df = tibble()) {
         layerId = ~`Genetic ID`, 
         # Popup information
         popup = ~ paste0(
+          "<div style='background-color:",
+          ifelse(str_detect(`Usage Note`,"Quality Alert"), "red", "white"),
+          "; padding: 10px; border-radius: 5px;'>",
           "Genetic ID: ", `Genetic ID`,
           "<br> Molecular Sex: ", `Molecular Sex`,
           "<br> Locality: ", `Unique Locality Name`,
@@ -102,7 +105,7 @@ plotMap <- function(df = tibble()) {
           "<br> SNPs hit on autosomal (1240k snpset): ", `SNPs hit on autosomal (1240k snpset)`),
         
         # Label information
-        label = ~paste0("Individual ", `Genetic ID`, " (", `Molecular Sex`, ")") 
+        label = ~paste0("Individual ", `Genetic ID`, " (", `Molecular Sex`, ")")
         )
   } 
   prov <- c("Esri.WorldTopoMap", "CartoDB.Positron", "OpenTopoMap")
