@@ -191,7 +191,7 @@ plotTransect <- function(data, aadr_ref_v62, selected = NULL, plotBy = "EEF") {
     annotate("text", x=3950, y=0.9, label= "C/EBA", size = 6, colour = "gray20") +
     annotate("text", x=3100, y=0.9, label= "BA", size = 6, colour = "gray20") +
     annotate("text", x=2303, y=0.9, label= "IA", size = 6, colour = "gray20") +
-    annotate("text", x=1723, y=0.98, label= "Romans period", size = 6, colour = "gray20") +
+    annotate("text", x=1723, y=0.98, label= "Roman/Roman Iron Age", size = 6, colour = "gray20") +
     annotate("text", x=985, y=0.9, label= "Early Medieval/Vikings", size = 6, colour = "gray20") +
     #Colours not changes
     # scale_fill_discrete(limits = unique(data$Country)) +
@@ -215,7 +215,7 @@ plotTransect <- function(data, aadr_ref_v62, selected = NULL, plotBy = "EEF") {
 get_pca <- function(data, aadr_ref_v62 = NULL, selected = NULL, references = NULL, locality = NULL, limits = NULL, colours = NULL){
   
   shapes <- c(21, rep(23,8))
-  names(shapes) <- c("Modern", "Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval")
+  names(shapes) <- c("Modern", "Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Roman/Roman Iron Age", "Early Medieval/Vikings", "Medieval")
   
   # Add Modern
   data_aux <- filter(data, DataRef == "AADR_Modern")
@@ -227,23 +227,32 @@ get_pca <- function(data, aadr_ref_v62 = NULL, selected = NULL, references = NUL
   # Add groups references
   if(length(references)) {
     
+    
     aadr_ref_v62_filtered <- data |>
       filter(Group %in% references) |>
-      mutate(Period = factor(Period, levels = c("Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
+      mutate(Period = factor(Period, levels = c("Mesolithic", "Neolithic", "C/EBA", "BA", "IA", "Roman/Roman Iron Age", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
       arrange(desc(Period), Group)
       
-      
-    
     data_aux <- data_aux |>
       add_case(aadr_ref_v62_filtered)
+  
+    # aux_ref_pca <- aadr_ref_v62_filtered |>
+    #   mutate(Aux1 = paste0(Country, "_", Period)) |>
+    #   left_join(tibble(Group = names(colours), `Col.` = colours),  by = ("Group" = "Group")) 
+    
+    # colours2 <- unique(aux_ref_pca$`Col.`)
+    # names(colours2) <- unique(aux_ref_pca$Aux1)
     
     pca <- pca + geom_point(aadr_ref_v62_filtered, 
                       mapping = aes(x = PCA1, y = PCA2, fill = Group, shape = Period),
-                      size = 3, colour = "black") +
+                      size = 3) +
       scale_shape_manual(values = shapes) +
       scale_fill_manual(values = colours) +
+      # scale_colour_manual(values = colours) +
       guides(fill = guide_legend("Group: ", override.aes = list(shape = 21, size = 5, alpha = 1, order = 1, nrow = 1)),
              shape = "none")
+    
+  
   }
   
   # Add Localities references

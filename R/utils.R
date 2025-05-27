@@ -8,7 +8,7 @@ locality_param_choices <- aadr_ref_v62 |>
   filter(str_detect(`Usage Note`, "Reference")) |>
   filter(!str_detect(`Usage Note`, "Quality Alert")) |>
   filter(!Period %in% c("Mesolithic", "-"))|>
-  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
+  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Roman/Roman Iron Age", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
   arrange(desc(`Date Mean in BP`)) |>
   select(Country, `Unique Locality Name`, `Genetic ID`, Period) |>
   # distinct(Country, `Unique Locality Name`, `Genetic ID`) |>
@@ -34,7 +34,7 @@ locality_param_choices2 <- aadr_ref_v62 |>
   filter(Period != "Mesolithic")|>
   filter(`qpAdm Pvalue` > 0.01) |>
   filter(str_detect(`Usage Note`, "Reference;")) |>
-  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
+  mutate(Period = factor(Period, levels = c("Neolithic", "C/EBA", "BA", "IA", "Roman/Roman Iron Age", "Early Medieval/Vikings", "Medieval", "Modern"))) |>
   arrange(desc(`Date Mean in BP`)) |>
   select(Country, `Unique Locality Name`, `Genetic ID`, Period) |>
   # distinct(Country, `Unique Locality Name`, `Genetic ID`) |>

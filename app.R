@@ -23,8 +23,8 @@ options(warn=-1)
 
 # define parameters ----
 
-periods_param_choices <- c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval") #"Mesolithic", 
-names(periods_param_choices) <- c("Neolithic", "C/EBA", "BA", "IA", "Romans", "Early Medieval/Vikings", "Medieval") #"Mesolithic",
+periods_param_choices <- c("Neolithic", "C/EBA", "BA", "IA", "Roman/Roman Iron Age", "Early Medieval/Vikings", "Medieval") #"Mesolithic", 
+names(periods_param_choices) <- c("Neolithic", "C/EBA", "BA", "IA", "Roman/Roman Iron Age", "Early Medieval/Vikings", "Medieval") #"Mesolithic",
 
 timeseries_param_choices <- c("EEF", "WHG", "Steppe")
 names(timeseries_param_choices) <- c("Early European Farmers (EEF)", "Western hunter-gatherer (WHG)", "Yamnaya pastoralists (Steppe)")
@@ -38,7 +38,7 @@ pca_param_choices  <- aadr_ref_v62 |>
     Period == "C/EBA" ~ "2450–1550 BC",
     Period == "BA" ~ "1550–750 BC",
     Period == "IA" ~ "750 BC to AD 43",
-    Period == "Romans" ~ "AD 43 to AD 410",
+    Period == "Roman/Roman Iron Age" ~ "AD 43 to AD 410",
     Period == "Early Medieval/Vikings" ~ "AD 410 to AD 885",
     Period == "Medieval" ~ "AD 885 to AD 750",
     Period == "Modern" ~ "Present",
@@ -66,7 +66,7 @@ ternary_param_choices <- aadr_ref_v62 |>
     Period == "C/EBA" ~ "2450–1550 BC",
     Period == "BA" ~ "1550–750 BC",
     Period == "IA" ~ "750 BC to AD 43",
-    Period == "Romans" ~ "AD 43 to AD 410",
+    Period == "Roman/Roman Iron Age" ~ "AD 43 to AD 410",
     Period == "Early Medieval/Vikings" ~ "AD 410 to AD 885",
     Period == "Medieval" ~ "AD 885 to AD 750",
     Period == "Modern" ~ "Present",
