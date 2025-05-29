@@ -7,7 +7,7 @@ Ancient DNA (aDNA) has revolutionised our understanding of human history, reveal
   - Offer tools for analysing genetic diversity and population structure
   - Promote data sharing and collaborative research.
 
-The **COMMIOS web application** collected ancient DNA data from **[COMMIOS project](https://commiosarchaeology.wordpress.com/)** and from the **Allen Ancient DNA Resource (AADR)** [Mallick et al., 2024][1]. 
+The **[COMMIOS web application](https://shiny.york.ac.uk/COMMIOS_app)** collected ancient DNA data from **[COMMIOS project](https://commiosarchaeology.wordpress.com/)** and from the **Allen Ancient DNA Resource (AADR)** [Mallick et al., 2024][1]. 
 
 If you would like to collaborate or have any suggestion/request, please contact me:
 
